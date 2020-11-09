@@ -1,0 +1,132 @@
+---
+title: "Time Seres code"
+author: "Gladness Mikateko Khoza"
+date: "05/11/2020"
+output: word_document
+---
+```{r}
+#Before doing anything in R you need to set your working directory using the code below and inputing the folder you saved under or you use select the session option on the menu then go to set working directory 
+setwd("C:/Users/cozzy/Documents/Stats RDA")
+```
+
+#Summary of Time Series
+
+First you need to input your time series into R. This should be one vector of values, where the order the values appear in the vector should reflect the order in which the data was collected.
+E.g. > x <- c(45, 54, 34, 64, 34, 54, 65, 53, 34, 45, 65,
+55, 67, 35, 74, 44, 64)
+To plot your time series, use the function ”plot.ts”.
+E.g. > plot.ts(x)
+This will create a time variable for you, and plot the time series values on the y-axis.
+To obtain the autocorrelation function (acf) of the data,  use the function “acf”, and to plot the partial autocorrelation function (pacf) of the data, use the function “pacf”.
+E.g. > acf(x)
+ > pacf(x)
+ 
+```{r}
+#Before running your data, you need to install packages related to what you want, in this casem you want to do a time series and also forecast, so you are going to need the tseries & forecast packages
+#Installing Packages
+install.packages("tseries")
+install.packages("forecast")
+
+#Loading packages
+library(tseries)
+library(forecast)
+```
+
+```{r}
+#If you want to use R default data, you can check the pre-loaded ready to use using the code below. when run, it gives a list of all available data on R
+data()
+```
+
+```{r}
+#Loading data
+#After deciding on what data you gonna need, you will have to load it, if its R default data you will just call it e.g.
+data("sunspot.month")
+
+#However, if you already have data stored on your machine you will have to located it to where you stored it and read it in e.g.
+library(readxl)
+MonthlyNetEquityFlows <- read_excel("MonthlyNetEquityFlows.xlsx")
+```
+
+Plotting your data is the same for both the R pre-loaded data and the one you'd have created yourself. To plot you can either use the function plot() or plot.ts(). plot.ts() is the good way to go as it guarantees you a time series while the other depends on the type of data you have.
+
+```{r}
+#Plotting R pre-loaded data
+SS.m<-sunspot.month
+plot.ts(SS.m)
+```
+
+```{r}
+#Plotting own loaded data
+MonthlyNet<-MonthlyNetEquityFlows
+plot.ts(MonthlyNet)
+```
+
+From here below, I used the R pre-loaded data. You can run the other set of data as well if you like
+```{r}
+#Log transform
+SS.month <- log(SS.m)
+par(mfrow = c(1,2))
+plot(SS.m, main= "Sunspot Month")
+plot(SS.month, main = "Transformed Sunpot Month")
+```
+
+The Autocorrelation function (ACF) and Partial Autocorrelation function (PACF) of a stationary time series can be plotted. The behaviour of the ACF and PACF can be used to determine the type of model that should be used
+```{r}
+acf(SS.m)
+pacf(SS.m)
+
+```
+```{r}
+#Can use this same as the above if you like to determine the type of model that you can use with your own data
+par(mfrow=c(1,2))
+acf(diff(log()))
+pacf(diff(log()))
+```
+
+```{r}
+#Decomposition
+
+plot(stl(SS.m, s.window = "periodic"))
+par(mfrow = c(1,1))
+decompSS.m <- decompose(SS.m)
+attributes(decompSS.m)
+adf.test(SS.m)
+plot(diff(log(sunspot.month)))
+```
+
+auto.arima() can be used to automatically fit an ARIMA once it has been determined to be the suitable model. Once a model is found, it must be checked if it is a good fit using tsdiag(fit) and if is, then the reseduals should resemble white noise
+```{r}
+#Fitting an ARIMA Model
+fit<-auto.arima(sunspot.month)
+summary(fit)
+attributes(fit)
+fit$residuals
+plot(fit$residuals)
+tsdiag(fit)
+```
+Prediction or forecasting for future values is made after a suitable model has been found. hence, forecasts from the ARIMA Model are made
+```{r}
+#Forecasting
+
+plot(forecast(fit, h=20))
+```
+
+The  Monthly Net.... data is not from R, I downloaded it elsewhere so you'll have to use your own data if you want to run what's below
+```{r}
+#MonthlyNet Data Forecast
+MonthlyNe <- log(MonthlyNet)
+par(mfrow = c(1,2))
+plot.ts(MonthlyNet, main= "Air MonthlyNet")
+plot.ts(MonthlyNe, main = "Transformed Air MonthlyNet")
+par(mfrow = c(1,1))
+
+fit<-auto.arima(MonthlyNetEquityFlows)
+summary(fit)
+attributes(fit)
+fit$residuals
+plot(fit$residuals)
+
+tsdiag(fit)
+plot(forecast(fit, h=20))
+```
+
